@@ -155,7 +155,7 @@
         }
       }
     };
-    xhttp.open("GET", "/R30s", true);
+    xhttp.open("GET", "/RPM", true);
     xhttp.send();
   }, 30000);
 
@@ -259,7 +259,7 @@
           RPMAttuali = parseFloat(this.responseText);
         }
       };
-      xhttp.open("GET", "/RPM5s", true);
+      xhttp.open("GET", "/RPM", true);
       xhttp.send();
       point.update(RPMAttuali);
     }
@@ -366,7 +366,7 @@
           KMHAttuali = parseFloat(this.responseText);
         }
       };
-      xhttp.open("GET", "/KMH5s", true);
+      xhttp.open("GET", "/KMH", true);
       xhttp.send();
       point.update(KMHAttuali);
     }
@@ -393,7 +393,7 @@
         Minutes = this.responseText;
       }
     };
-    xhttp3.open("GET", "/Tempo", true);
+    xhttp3.open("GET", "/Time", true);
     xhttp3.send();
     const span = document.getElementById('SpanTempo');
     span.textContent = Minutes;
@@ -406,7 +406,7 @@
         Calorie = this.responseText;
       }
     };
-    xhttp4.open("GET", "/Calorie", true);
+    xhttp4.open("GET", "/Calories", true);
     xhttp4.send();
     const span = document.getElementById('SpanCalorie');
     span.textContent = Calorie;
