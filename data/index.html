@@ -1,0 +1,416 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/highcharts-more.js"></script>
+  <script src="https://code.highcharts.com/modules/solid-gauge.js"></script>
+  <style>
+    html {
+      background-color: black;
+    }
+
+    .button {
+      border-radius: 75px;
+      border: none;
+      padding: 0px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 70px;
+      width: 30%;
+      height: 200px;
+      margin: 1%;
+    }
+
+    .buttonStart {
+      background-color: #04AA6D;
+      color: white;
+    }
+
+    .buttonPause {
+      background-color: #ffa500;
+      color: white;
+    }
+
+    .buttonStop {
+      background-color: #ff0000;
+      color: white;
+    }
+
+    .footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+
+    .Stats {
+      display: inline-block;
+      font-size: 70px;
+      margin: 1%;
+      width: 30%;
+      border-radius: 100px;
+      height: 200px;
+      background-color: rgb(19, 19, 19);
+      text-align: center;
+      vertical-align: middle;
+      color: white;
+    }
+
+    .Gauges {
+      width: 100%;
+      display: inline-block;
+      margin: 0px;
+    }
+
+    .Gauge {
+      width: 49%;
+      display: inline;
+      margin: 0px;
+    }
+
+    .Graphs {
+      width: 100%;
+      display: inline-block;
+      margin: 0px;
+    }
+
+    .Graph {
+      width: 100%;
+      margin: 0px;
+    }
+  </style>
+  <title>Cyclette</title>
+</head>
+<center>
+
+  <body>
+    <div class="topper">
+      <button class="button Stats"><span id="SpanTempo">0</span> Min.</button>
+      <button class="button Stats"><span id="SpanCalorie">0</span> Cal.</button>
+      <button class="button Stats"><span id="SpanKM">0</span> Km.</button>
+    </div>
+
+    <div class="Gauges">
+      <div>
+        <div id="container-rpm" class="chart-container Gauge"></div>
+        <div id="container-KMH" class="chart-container Gauge"></div>
+      </div>
+    </div>
+
+    <div class="Graphs">
+      <div>
+        <div id="chart-R30s" class="container Graph"></div>
+      </div>
+      <div>
+        <div id="chart-R30s" class="container Graph"></div>
+      </div>
+    </div>
+
+    <div class="footer">
+
+      <button class="button buttonStart">AVVIO</button>
+      <button class="button buttonPause">PAUSA</button>
+      <button class="button buttonStop">STOP</button>
+
+    </div>
+  </body>
+</center>
+<script>
+  var chartT = new Highcharts.Chart({
+    chart: { renderTo: 'chart-R30s' },
+    title: { text: 'Rotazioni ogni 30 secondi' },
+    series: [{
+      showInLegend: false,
+      data: []
+    }],
+    plotOptions: {
+      line: {
+        animation: false,
+        dataLabels: { enabled: true }
+      },
+      series: { color: '#059e8a' }
+    },
+    xAxis: {
+      type: 'datetime',
+      dateTimeLabelFormats: { second: '%H:%M:%S' }
+    },
+    yAxis: {
+      title: { text: 'R/30s' }
+    },
+    credits: { enabled: false }
+  });
+  setInterval(function () {
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        var x = (new Date()).getTime(),
+          y = parseFloat(this.responseText);
+        //console.log(this.responseText);
+        if (chartT.series[0].data.length > 20) {
+          chartT.series[0].addPoint([x, y], true, true, true);
+        } else {
+          chartT.series[0].addPoint([x, y], true, false, true);
+        }
+      }
+    };
+    xhttp.open("GET", "/R30s", true);
+    xhttp.send();
+  }, 30000);
+
+  //RPM Gauge
+  var gaugeOptions = {
+    chart: {
+      type: 'solidgauge'
+    },
+
+    title: null,
+
+    pane: {
+      center: ['50%', '85%'],
+      size: '140%',
+      startAngle: -90,
+      endAngle: 90,
+      background: {
+        backgroundColor:
+          Highcharts.defaultOptions.legend.backgroundColor || '#EEE',
+        innerRadius: '60%',
+        outerRadius: '100%',
+        shape: 'arc',
+      }
+    },
+
+    exporting: {
+      enabled: false
+    },
+
+    tooltip: {
+      enabled: false
+    },
+
+    // the value axis
+    yAxis: {
+      stops: [
+        [0.1, '#55BF3B'], // green
+        [0.5, '#DDDF0D'], // yellow
+        [0.9, '#DF5353'] // red
+      ],
+      lineWidth: 0,
+      tickWidth: 0,
+      minorTickInterval: null,
+      tickAmount: 2,
+      title: {
+        y: -70
+      },
+      labels: {
+        y: 16
+      }
+    },
+
+    plotOptions: {
+      solidgauge: {
+        dataLabels: {
+          y: 5,
+          borderWidth: 0,
+          useHTML: true
+        }
+      }
+    }
+  };
+
+
+  // The RPM gauge
+  var chartRpm = Highcharts.chart('container-rpm', Highcharts.merge(gaugeOptions, {
+    yAxis: {
+      min: 0,
+      max: 150,
+      title: {
+        text: 'RPM'
+      }
+    },
+
+    series: [{
+      name: 'RPM',
+      data: [1],
+      dataLabels: {
+        format:
+          '<div style="text-align:center">' +
+          '<span style="font-size:25px">{y:.1f}</span><br/>' +
+          '<span style="font-size:12px;opacity:0.4">' +
+          '</span>' +
+          '</div>'
+      },
+      tooltip: {
+        valueSuffix: ' revolutions/min'
+      }
+    }]
+
+  }));
+
+  // Bring life to the dials
+  setInterval(function () {
+    // RPM
+    if (chartRpm) {
+      point = chartRpm.series[0].points[0];
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          RPMAttuali = parseFloat(this.responseText);
+        }
+      };
+      xhttp.open("GET", "/RPM5s", true);
+      xhttp.send();
+      point.update(RPMAttuali);
+    }
+  }, 5000);
+
+  // KMH
+  //KMH Gauge
+  var gaugeOptions = {
+    chart: {
+      type: 'solidgauge'
+    },
+
+    title: null,
+
+    pane: {
+      center: ['50%', '85%'],
+      size: '140%',
+      startAngle: -90,
+      endAngle: 90,
+      background: {
+        backgroundColor:
+          Highcharts.defaultOptions.legend.backgroundColor || '#EEE',
+        innerRadius: '60%',
+        outerRadius: '100%',
+        shape: 'arc',
+      }
+    },
+
+    exporting: {
+      enabled: false
+    },
+
+    tooltip: {
+      enabled: false
+    },
+
+    // the value axis
+    yAxis: {
+      stops: [
+        [0.1, '#55BF3B'], // green
+        [0.5, '#DDDF0D'], // yellow
+        [0.9, '#DF5353'] // red
+      ],
+      lineWidth: 0,
+      tickWidth: 0,
+      minorTickInterval: null,
+      tickAmount: 2,
+      title: {
+        y: -70
+      },
+      labels: {
+        y: 16
+      }
+    },
+
+    plotOptions: {
+      solidgauge: {
+        dataLabels: {
+          y: 5,
+          borderWidth: 0,
+          useHTML: true
+        }
+      }
+    }
+  };
+
+
+  // The KMH gauge
+  var chartKMH = Highcharts.chart('container-KMH', Highcharts.merge(gaugeOptions, {
+    yAxis: {
+      min: 0,
+      max: 150,
+      title: {
+        text: 'KMH'
+      }
+    },
+
+    series: [{
+      name: 'KMH',
+      data: [1],
+      dataLabels: {
+        format:
+          '<div style="text-align:center">' +
+          '<span style="font-size:25px">{y:.1f}</span><br/>' +
+          '<span style="font-size:12px;opacity:0.4">' +
+          '</span>' +
+          '</div>'
+      },
+      tooltip: {
+        valueSuffix: ' revolutions/min'
+      }
+    }]
+
+  }));
+
+  // Bring life to the dials
+  setInterval(function () {
+    // KMH
+    if (chartKMH) {
+      point = chartKMH.series[0].points[0];
+      var xhttp = new XMLHttpRequest();
+      xhttp.onreadystatechange = function () {
+        if (this.readyState == 4 && this.status == 200) {
+          KMHAttuali = parseFloat(this.responseText);
+        }
+      };
+      xhttp.open("GET", "/KMH5s", true);
+      xhttp.send();
+      point.update(KMHAttuali);
+    }
+  }, 5000);
+
+  //KM Barra Sopra
+  setInterval(function () {
+    var xhttp2 = new XMLHttpRequest();
+    xhttp2.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        KMPercorsi = parseFloat(this.responseText);
+      }
+    };
+    xhttp2.open("GET", "/KM", true);
+    xhttp2.send();
+    const span = document.getElementById('SpanKM');
+    span.textContent = KMPercorsi;
+  }, 5000);
+
+  setInterval(function () {
+    var xhttp3 = new XMLHttpRequest();
+    xhttp3.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        Minutes = this.responseText;
+      }
+    };
+    xhttp3.open("GET", "/Tempo", true);
+    xhttp3.send();
+    const span = document.getElementById('SpanTempo');
+    span.textContent = Minutes;
+  }, 1000);
+
+  setInterval(function () {
+    var xhttp4 = new XMLHttpRequest();
+    xhttp4.onreadystatechange = function () {
+      if (this.readyState == 4 && this.status == 200) {
+        Calorie = this.responseText;
+      }
+    };
+    xhttp4.open("GET", "/Calorie", true);
+    xhttp4.send();
+    const span = document.getElementById('SpanCalorie');
+    span.textContent = Calorie;
+  }, 30000);
+</script>
+
+</html>
